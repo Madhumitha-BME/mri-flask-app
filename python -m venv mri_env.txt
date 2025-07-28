@@ -1,0 +1,4 @@
+python -m venv mri_env
+
+# Activate it (Windows)
+mri_env\Scripts\activate

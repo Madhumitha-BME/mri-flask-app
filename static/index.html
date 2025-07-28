@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MRI Segmentation Web Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>MRI Segmentation Web Service</h1>
+        <p>Upload your multi-modal brain MRI NIfTI files (.nii or .nii.gz) to get an automated segmentation of brain metastases.</p>
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="files[]" multiple required>
+            <input type="submit" value="Upload & Segment">
+        </form>
+
+        {% if download_link %}
+        <div class="results">
+            <h2>Prediction Complete!</h2>
+            <p>Download your segmentation mask: <a href="{{ url_for('download_file', filename=download_link) }}">{{ download_link }}</a></p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

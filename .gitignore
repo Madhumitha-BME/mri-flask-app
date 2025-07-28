@@ -1,0 +1,17 @@
+# Virtual environment
+venv/
+mri_env_new/
+mri_env_final/
+
+# Python files
+__pycache__/
+*.pyc
+
+# Uploaded/generated files
+uploads/
+predicted_masks/
+
+# Large model files - handled by Git LFS
+*.h5
+*.onnx
+
