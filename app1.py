@@ -25,7 +25,9 @@ from config import (
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'supersecretkey'
-
+@app.route('/')
+def index():
+    return render_template("index.html", image_path=None, error=None)
 model = None
 
 def load_model_on_startup():
@@ -125,6 +127,7 @@ def preprocess_uploaded_data(uploaded_files, target_img_dim, modalities_to_use):
 
 # --- 3. Handle File Uploads and Prediction Logic ---
 @app.route('/', methods=['GET', 'POST'])
+
 def upload_file():
     if request.method == 'POST':
         if 'files[]' not in request.files:
