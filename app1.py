@@ -17,6 +17,7 @@ from config import (
 
 # --- 1. Set up the Flask App ---
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024 * 1024 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'supersecretkey'
 
