@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --timeout 300 --client-max-body-size 1073741824 app1:app
+web: gunicorn --bind 0.0.0.0:$PORT --timeout 600 --client-max-body-size 1073741824 app_render:app_render

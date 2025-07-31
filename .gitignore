@@ -1,17 +1,34 @@
-# Virtual environment
 venv/
+.venv/
+env/
+.env/
 mri_env_new/
 mri_env_final/
+mri_env_local_stable/
+mri_env_stable/
 
-# Python files
 __pycache__/
 *.pyc
-
-# Uploaded/generated files
+*.pyo
+*.pyd
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.vscode/
+.idea/
+*.swp
+*~
+*.bak
+Thumbs.db         
+ehthumbs.db       
+desktop.ini       
 uploads/
 predicted_masks/
-
-# Large model files - handled by Git LFS
-*.h5
-*.onnx
-
+*.log
+*.tmp
+*.temp
+temp/
+trained_models/brain_mets_unet_multi_patient_model.h5
