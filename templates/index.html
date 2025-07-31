@@ -4,35 +4,110 @@
     <meta charset="utf-8">
     <title>MRI Segmentation Web Service</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        // JavaScript for handling file reading and Base64 encoding
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            const fileInput = document.querySelector('input[type="file"]');
+            const uploadButton = document.querySelector('input[type="submit"]');
+            const flashesDiv = document.querySelector('.flashes'); // To display messages
+            const resultsDiv = document.querySelector('.results');
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault(); // Prevent default form submission
+
+                // Clear previous messages and results
+                if (flashesDiv) flashesDiv.innerHTML = '';
+                if (resultsDiv) resultsDiv.innerHTML = '';
+
+                const files = fileInput.files;
+                if (files.length === 0) {
+                    displayMessage('Please select files to upload.', 'error');
+                    return;
+                }
+
+                displayMessage('Uploading and processing... This may take a moment.', 'info');
+                uploadButton.disabled = true; // Disable button during upload
+
+                const filePromises = Array.from(files).map(file => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            // reader.result is a data URL (e.g., "data:image/png;base64,iVBORw0KGgo...")
+                            // We only need the base64 part
+                            const base64Content = reader.result.split(',')[1];
+                            resolve({
+                                filename: file.name,
+                                content: base64Content
+                            });
+                        };
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file); // Read file as Base64
+                    });
+                });
+
+                try {
+                    const encodedFiles = await Promise.all(filePromises);
+                    
+                    const response = await fetch('/', { // POST to the same route
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json' // Send as JSON
+                        },
+                        body: JSON.stringify({ files: encodedFiles })
+                    });
+
+                    const data = await response.json(); // Assuming server responds with JSON
+
+                    if (response.ok) {
+                        displayMessage(data.message || 'Prediction successful!', 'success');
+                        if (data.download_link) {
+                            displayResultLink(data.download_link);
+                        }
+                    } else {
+                        displayMessage(data.message || 'An error occurred during prediction.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error during fetch:', error);
+                    displayMessage('A network error occurred. Please try again.', 'error');
+                } finally {
+                    uploadButton.disabled = false; // Re-enable button
+                }
+            });
+
+            function displayMessage(message, type) {
+                if (flashesDiv) {
+                    const li = document.createElement('li');
+                    li.textContent = message;
+                    li.className = type; // For CSS styling
+                    flashesDiv.appendChild(li);
+                }
+            }
+
+            function displayResultLink(link) {
+                if (resultsDiv) {
+                    resultsDiv.innerHTML = `
+                        <h2>Prediction Complete!</h2>
+                        <p>Download your segmentation result: <a href="${link}">Download</a></p>
+                    `;
+                }
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>MRI Segmentation Web Service</h1>
         <p>Upload your multi-modal brain MRI NIfTI files (.nii or .nii.gz) to get an automated segmentation of brain metastases.</p>
         
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <ul class=flashes>
-            {% for message in messages %}
-              <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-          {% endif %}
-        {% endwith %}
+        <ul class="flashes"></ul>
 
-        <form method="POST" enctype="multipart/form-data" action="/">
-          <input type="file" name="files[]" multiple>
-
-          <input type="submit" value="Upload">
+        <form id="uploadForm">
+            <input type="file" name="files[]" multiple required>
+            <input type="submit" value="Upload & Segment">
         </form>
 
-
-        {% if download_link %}
-        <div class="results">
-            <h2>Prediction Complete!</h2>
-            <p>Download your segmentation result: <a href="{{ download_link }}">Download</a></p>
-        </div>
-        {% endif %}
+        <div class="results"></div>
     </div>
 </body>
 </html>
