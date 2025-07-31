@@ -21,11 +21,13 @@ os.makedirs(UPLOAD_FOLDER,exist_ok=True)
 
 
 # Modalities and mask suffix (adjust based on your BraTS file naming)
-MODALITIES_TO_USE = ['t1', 't1ce', 't2', 'flair']
+MODALITIES_TO_USE = ['t1']
 MASK_FILE_SUFFIX = '_seg' # e.g., BraTS20_Training_032_seg.nii.gz
 
 # --- Image Processing Parameters ---
 IMG_DIM = (128, 128, 128) # Target dimensions for processed 3D volumes
+NUM_CHANNELS = len(MODALITIES_TO_USE) # This will be 1 for the test
+
 TARGET_VOXEL_SPACING = (1.0, 1.0, 1.0) # Target isotropic spacing (mm)
 
 # --- Model Parameters ---

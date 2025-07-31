@@ -5,59 +5,57 @@
     <title>MRI Segmentation Web Service</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script>
-        // JavaScript for handling file reading and Base64 encoding
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('form');
             const fileInput = document.querySelector('input[type="file"]');
             const uploadButton = document.querySelector('input[type="submit"]');
-            const flashesDiv = document.querySelector('.flashes'); // To display messages
+            const flashesDiv = document.querySelector('.flashes');
             const resultsDiv = document.querySelector('.results');
 
             form.addEventListener('submit', async (event) => {
-                event.preventDefault(); // Prevent default form submission
+                event.preventDefault();
 
-                // Clear previous messages and results
                 if (flashesDiv) flashesDiv.innerHTML = '';
                 if (resultsDiv) resultsDiv.innerHTML = '';
 
                 const files = fileInput.files;
                 if (files.length === 0) {
-                    displayMessage('Please select files to upload.', 'error');
+                    displayMessage('Please select a single NIfTI file for this test.', 'error');
                     return;
                 }
+                // --- CHANGE: Only process the first file for this test ---
+                const file = files[0]; 
 
-                displayMessage('Uploading and processing... This may take a moment.', 'info');
-                uploadButton.disabled = true; // Disable button during upload
+                displayMessage('Uploading and processing a single file... This may take a moment.', 'info');
+                uploadButton.disabled = true;
 
-                const filePromises = Array.from(files).map(file => {
-                    return new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            // reader.result is a data URL (e.g., "data:image/png;base64,iVBORw0KGgo...")
-                            // We only need the base64 part
-                            const base64Content = reader.result.split(',')[1];
-                            resolve({
-                                filename: file.name,
-                                content: base64Content
-                            });
-                        };
-                        reader.onerror = error => reject(error);
-                        reader.readAsDataURL(file); // Read file as Base64
-                    });
+                // Promise to read and encode the single file
+                const filePromise = new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64Content = reader.result.split(',')[1];
+                        resolve({
+                            filename: file.name,
+                            content: base64Content
+                        });
+                    };
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
                 });
 
                 try {
-                    const encodedFiles = await Promise.all(filePromises);
+                    const encodedFile = await filePromise; // Await the single file
                     
-                    const response = await fetch('/', { // POST to the same route
+                    const response = await fetch('/', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json' // Send as JSON
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ files: encodedFiles })
+                        // --- CHANGE: Send a single object, not an array ---
+                        body: JSON.stringify(encodedFile) // Send {filename: ..., content: ...} directly
                     });
 
-                    const data = await response.json(); // Assuming server responds with JSON
+                    const data = await response.json();
 
                     if (response.ok) {
                         displayMessage(data.message || 'Prediction successful!', 'success');
@@ -71,7 +69,7 @@
                     console.error('Error during fetch:', error);
                     displayMessage('A network error occurred. Please try again.', 'error');
                 } finally {
-                    uploadButton.disabled = false; // Re-enable button
+                    uploadButton.disabled = false;
                 }
             });
 
@@ -79,7 +77,7 @@
                 if (flashesDiv) {
                     const li = document.createElement('li');
                     li.textContent = message;
-                    li.className = type; // For CSS styling
+                    li.className = type;
                     flashesDiv.appendChild(li);
                 }
             }
@@ -98,13 +96,12 @@
 <body>
     <div class="container">
         <h1>MRI Segmentation Web Service</h1>
-        <p>Upload your multi-modal brain MRI NIfTI files (.nii or .nii.gz) to get an automated segmentation of brain metastases.</p>
+        <p>Upload a single NIfTI file (.nii or .nii.gz) for this test.</p>
         
         <ul class="flashes"></ul>
 
         <form id="uploadForm">
-            <input type="file" name="files[]" multiple required>
-            <input type="submit" value="Upload & Segment">
+            <input type="file" name="file" required> <input type="submit" value="Upload & Segment">
         </form>
 
         <div class="results"></div>
