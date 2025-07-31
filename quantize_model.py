@@ -29,6 +29,10 @@ print("Starting float16 quantization...")
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 converter.target_spec.supported_types = [tf.float16]
+converter.target_spec.supported_ops = [
+    tf.lite.OpsSet.TFLITE_BUILTINS, # Standard TFLite ops
+    tf.lite.OpsSet.SELECT_TF_OPS    # Enable ops that need full TF kernels (like MaxPool3D)
+]
 
 try:
     tflite_model = converter.convert()
